@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Podium Coach</title>
+<meta name="description" content="Speak your answer, get coached. Live transcription, voice analysis and an AI speaking coach for professional conversations.">
+<meta name="theme-color" content="#0E6B66">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Podium<span>.</span></h1>
+      <p>Speak your answer out loud. Podium transcribes it, measures your pace, pauses, pitch and fillers, and coaches you to say it sharper.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="lbl">Streak</span><b id="streak">0 d</b></div>
+      <div class="stat"><span class="lbl">Reps</span><b id="reps">0</b></div>
+      <div class="stat"><span class="lbl">Last 10</span><svg class="spark" id="spark" viewBox="0 0 120 34" aria-label="Score trend"></svg></div>
+      <button class="iconbtn" id="openSettings" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Zm8.9-2.6.1-.9-.1-.9 2-1.6-2-3.4-2.4 1a7.3 7.3 0 0 0-1.6-.9L16.5 3h-4l-.4 2.6c-.6.2-1.1.5-1.6.9l-2.4-1-2 3.4 2 1.6-.1.9.1.9-2 1.6 2 3.4 2.4-1c.5.4 1 .7 1.6.9l.4 2.6h4l.4-2.6c.6-.2 1.1-.5 1.6-.9l2.4 1 2-3.4-2-1.6Z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="goalbar" role="group" aria-label="Your target">
+    <span class="lbl">Target</span>
+    <button class="chip" data-goal="career">Career advancement</button>
+    <button class="chip" data-goal="leader">Lead meetings</button>
+    <button class="chip" data-goal="network">Networking</button>
+    <button class="chip" data-goal="interview">Interviews</button>
+  </div>
+
+  <div class="grid">
+    <nav class="rail" id="rail" aria-label="Scenarios"></nav>
+
+    <main class="col">
+      <section class="stage">
+        <div class="prompt">
+          <div class="prompt-head">
+            <span class="lbl" id="sTag"></span>
+            <button class="btn ghost small" id="hearPrompt">Hear it</button>
+          </div>
+          <h2 id="sTitle"></h2>
+          <p id="sPrompt"></p>
+          <div class="frame" id="sFrame"></div>
+        </div>
+
+        <div class="recorder">
+          <button class="rec" id="recBtn" aria-pressed="false">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="recLabel">Start speaking</span>
+          </button>
+          <div class="rec-meta">
+            <span class="mono clock" id="clock">0:00</span>
+            <span class="status" id="status" role="status">Press start, then answer as if you were in the room.</span>
+          </div>
+        </div>
+
+        <figure class="strip">
+          <canvas id="strip" height="120" aria-label="Voice timeline: volume bars, pitch dots, pauses shaded"></canvas>
+          <figcaption class="legend">
+            <span><i class="sw vol"></i>Volume</span>
+            <span><i class="sw pitch"></i>Pitch</span>
+            <span><i class="sw pause"></i>Pause over 1.5 s</span>
+          </figcaption>
+        </figure>
+
+        <audio id="playback" controls hidden></audio>
+
+        <div>
+          <label class="lbl" for="transcript">Transcript <span class="note" id="trNote">(edit to fix recognition mistakes)</span></label>
+          <textarea id="transcript" placeholder="Your words appear here as you speak. No microphone? Type your answer instead."></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="aiBtn">Get AI coaching</button>
+          <button class="btn" id="saveBtn">Save rep</button>
+          <button class="btn" id="retryBtn">New take</button>
+        </div>
+      </section>
+
+      <section class="card coach" id="coach" hidden>
+        <div class="coach-head">
+          <div><span class="lbl">AI coach</span><h3 id="cHeadline"></h3></div>
+          <b class="mono cscore" id="cScore"></b>
+        </div>
+        <div class="coach-body" id="cBody"></div>
+      </section>
+
+      <section class="card">
+        <div class="legend">
+          <span><i class="sw" style="background:var(--filler)"></i>Filler</span>
+          <span><i class="sw" style="background:var(--hedge)"></i>Hedge / apology</span>
+          <span><i class="sw" style="background:var(--weak)"></i>Weak word</span>
+        </div>
+        <div class="marked" id="marked"></div>
+        <div class="clean"><span class="lbl">Tightened draft</span><p id="cleaned">—</p></div>
+      </section>
+    </main>
+
+    <aside class="card score-card" aria-label="Scorecard">
+      <div class="score">
+        <svg class="dial" id="dial" viewBox="0 0 100 100"></svg>
+        <div><h3 id="verdict">No take yet</h3><p id="verdictSub">Record an answer to see your score.</p></div>
+      </div>
+      <div class="bars" id="bars"></div>
+      <span class="lbl">Delivery</span>
+      <div class="metrics" id="vmetrics"></div>
+      <span class="lbl">Words</span>
+      <div class="metrics" id="tmetrics"></div>
+      <span class="lbl">Coach notes</span>
+      <ul class="tips" id="tips"></ul>
+    </aside>
+  </div>
+
+  <div class="lower">
+    <section class="card">
+      <h3>Swap list</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Instead of</th><th>Say</th></tr></thead>
+        <tbody>
+          <tr><td class="weakc">I think we should maybe…</td><td class="strongc">I recommend we…</td></tr>
+          <tr><td class="weakc">Sorry to bother you, but…</td><td class="strongc">Do you have two minutes for…</td></tr>
+          <tr><td class="weakc">I just wanted to check…</td><td class="strongc">I'm following up on…</td></tr>
+          <tr><td class="weakc">Does that make sense?</td><td class="strongc">What questions do you have?</td></tr>
+          <tr><td class="weakc">It's kind of a big deal</td><td class="strongc">It cuts churn by 12%</td></tr>
+          <tr><td class="weakc">I'm not an expert, but…</td><td class="strongc">From what I've seen on X…</td></tr>
+          <tr><td class="weakc">Basically, um, the thing is</td><td class="strongc">(pause) The point is</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="card">
+      <h3>Your reps</h3>
+      <div class="hist" id="hist"></div>
+      <p class="note">Stored on this device only.</p>
+    </section>
+  </div>
+
+  <footer class="foot note">
+    Privacy: audio and voice analysis stay in your browser. Live transcription uses your browser's speech service (in Chrome and Edge this sends audio to Google/Microsoft). AI coaching sends only the transcript and the numbers above to the coach server.
+  </footer>
+</div>
+
+<dialog id="settings">
+  <form method="dialog" class="settings">
+    <h3>Settings</h3>
+    <label class="field"><span class="lbl">Speaking language</span>
+      <select id="lang">
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="en-AU">English (Australia)</option>
+        <option value="en-IN">English (India)</option>
+        <option value="fr-FR">Français</option>
+        <option value="es-ES">Español</option>
+        <option value="de-DE">Deutsch</option>
+      </select>
+    </label>
+    <label class="field"><span class="lbl">Access code (only if your server sets one)</span>
+      <input id="accessCode" type="password" autocomplete="off">
+    </label>
+    <label class="check"><input id="autoCoach" type="checkbox"> Ask the AI coach automatically after each take</label>
+    <button class="btn danger small" id="wipe" type="button">Delete saved reps</button>
+    <div class="actions"><button class="btn primary" value="ok">Done</button></div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
