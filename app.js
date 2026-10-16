@@ -380,6 +380,65 @@ function refresh(){
   $("#cleaned").textContent = text.trim() ? tighten(text) : "—";
 }
 
+// ---------- Copy for Claude (free coaching via the Claude app) ----------
+// Builds the same brief the AI coach endpoint sends, as plain text, so it
+// can be pasted into Claude with no API key and no cost.
+function buildCoachPrompt(){
+  const transcript = $("#transcript").value.trim();
+  const a = lastText || analyzeText(transcript);
+  const v = voice;
+  const r1 = x => x == null ? "n/a" : Math.round(x * 10) / 10;
+  return [
+    "You are my executive speaking coach. Review the spoken answer below. Be direct, specific and kind, and quote my exact words when you point out a problem. The transcript comes from speech-to-text, so fillers like \"um\" may be missing. Reply in the same language as my transcript.",
+    "",
+    "Give me, in this order:",
+    "1. A score out of 100 and a headline of 8 words or fewer",
+    "2. What worked (1 to 3 points)",
+    "3. Say it sharper: up to 4 lines, each as my exact words → a better version, with a short reason",
+    "4. Delivery: what my pace, pauses, pitch and volume numbers mean",
+    "5. A stronger version of my whole answer in my own voice, same facts, 20 to 45 seconds when spoken",
+    "6. One drill to do right now (under 30 words)",
+    "7. The follow-up question the other person would most likely ask next",
+    "",
+    "SCENARIO: " + cur.title,
+    "Situation: " + cur.prompt,
+    "Suggested structure: " + cur.frame.join(" → "),
+    "My goal: " + ({career:"career advancement",leader:"leading meetings",network:"networking",interview:"interviews"}[goal] || goal),
+    "",
+    "MEASURED DELIVERY",
+    v ? "- Length " + r1(v.duration) + " s, pace " + v.wpm + " words/min (target 130-160)" : "- No recording: typed answer",
+    v ? "- Pauses over 1.5 s: " + v.longPauses + ", short pauses: " + v.shortPauses : null,
+    v ? "- Pitch variation: " + r1(v.pitchSt) + " semitones (under 2 = monotone, 2.5-5 = expressive)" : null,
+    v ? "- Volume control: " + v.volumeSteady + "/100" : null,
+    "- Fillers found: " + a.f + ", hedges/apologies: " + a.h + ", weak words: " + a.w,
+    "",
+    "MY ANSWER (transcript):",
+    "\"\"\"" + transcript + "\"\"\"",
+  ].filter(x => x !== null).join("\n");
+}
+
+async function copyForClaude(){
+  const transcript = $("#transcript").value.trim();
+  if ((transcript.match(/\S+/g) || []).length < 5){ setStatus("Say or type at least a sentence first.", true); return; }
+  refresh();
+  const text = buildCoachPrompt();
+  const box = $("#copyFallback");
+  // Open the tab inside the click so pop-up blockers allow it.
+  const tab = window.open("https://claude.ai/new", "_blank");
+  if (tab) { try { tab.opener = null; } catch {} }
+  try {
+    await navigator.clipboard.writeText(text);
+    box.hidden = true;
+    const b = $("#copyBtn"); b.textContent = "Copied ✓"; setTimeout(() => b.textContent = "Copy for Claude", 1800);
+    setStatus(tab ? "Copied. Paste it into the Claude tab that just opened." : "Copied. Open Claude and paste it into a new chat.");
+  } catch {
+    // Clipboard blocked (older browsers / in-app views): show it to copy by hand.
+    $("#copyText").value = text; box.hidden = false;
+    $("#copyText").focus(); $("#copyText").select();
+    setStatus("Your browser blocked the clipboard. The text is selected below: copy it, then paste it into Claude.");
+  }
+}
+
 // ---------- AI coach ----------
 async function runCoach(){
   const transcript = $("#transcript").value.trim();
@@ -398,7 +457,7 @@ async function runCoach(){
   } catch (e){
     lastCoach = null;
     $("#coach").hidden = false; $("#cHeadline").textContent = "Coach unavailable"; $("#cScore").textContent = "";
-    $("#cBody").innerHTML = `<p class="status err">${esc(e.message === "Failed to fetch" ? "Couldn't reach the coach server. Check your connection." : e.message)}</p><p class="note">The local scorecard still works without it.</p>`;
+    $("#cBody").innerHTML = `<p class="status err">${esc(e.message === "Failed to fetch" ? "Couldn't reach the coach server. Check your connection." : e.message)}</p><p class="note">The local scorecard still works without it, and <strong>Copy for Claude</strong> gives you the same coaching free in the Claude app.</p>`;
   } finally { btn.disabled = false; btn.textContent = "Get AI coaching"; }
 }
 function renderCoach(d){
@@ -443,7 +502,7 @@ function pick(s, keepRail){
   cur = s; voice = null; lastFrames = null; lastCoach = null;
   $("#sTag").textContent = s.tag; $("#sTitle").textContent = s.title; $("#sPrompt").textContent = s.prompt;
   $("#sFrame").innerHTML = s.frame.map(f => `<span>${esc(f)}</span>`).join('<span class="arrow">→</span>');
-  $("#transcript").value = ""; $("#playback").hidden = true; $("#coach").hidden = true; $("#clock").textContent = "0:00";
+  $("#transcript").value = ""; $("#playback").hidden = true; $("#coach").hidden = true; $("#clock").textContent = "0:00"; $("#copyFallback").hidden = true;
   $("#recLabel").textContent = "Start speaking";
   setStatus("Press start, then answer as if you were in the room.");
   if (!keepRail) renderRail(); else $("#rail").querySelectorAll(".scen").forEach(b => b.setAttribute("aria-current","false"));
@@ -479,6 +538,7 @@ function saveRep(){
 $("#recBtn").onclick = () => take ? stopTake(false) : startTake();
 $("#retryBtn").onclick = () => pick(cur, cur.id.startsWith("fu-"));
 $("#aiBtn").onclick = runCoach;
+$("#copyBtn").onclick = copyForClaude;
 $("#saveBtn").onclick = saveRep;
 $("#hearPrompt").onclick = () => speak(cur.title.endsWith("?") ? cur.title : cur.prompt);
 let deb; $("#transcript").addEventListener("input", () => { clearTimeout(deb); deb = setTimeout(() => {

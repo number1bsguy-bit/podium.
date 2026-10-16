@@ -81,8 +81,14 @@
           <textarea id="transcript" placeholder="Your words appear here as you speak. No microphone? Type your answer instead."></textarea>
         </div>
 
+        <div id="copyFallback" class="copybox" hidden>
+          <label class="lbl" for="copyText">Copy this, then paste it into Claude</label>
+          <textarea id="copyText" readonly></textarea>
+          <a class="btn small" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a>
+        </div>
         <div class="actions">
-          <button class="btn primary" id="aiBtn">Get AI coaching</button>
+          <button class="btn primary" id="copyBtn">Copy for Claude</button>
+          <button class="btn" id="aiBtn">Get AI coaching</button>
           <button class="btn" id="saveBtn">Save rep</button>
           <button class="btn" id="retryBtn">New take</button>
         </div>

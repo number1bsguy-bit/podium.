@@ -162,3 +162,7 @@ dialog::backdrop{background:rgba(0,0,0,.4)}
 .field select,.field input{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:9px 10px}
 .check{display:flex;gap:8px;align-items:center;font-size:14px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.copybox{display:flex;flex-direction:column;gap:8px;border:1px dashed var(--accent);border-radius:10px;padding:12px}
+.copybox textarea{min-height:120px;font-family:var(--f-mono);font-size:12.5px;margin-top:0}
+.copybox .btn{align-self:flex-start;text-decoration:none;color:inherit}

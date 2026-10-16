@@ -1,5 +1,5 @@
 // Offline cache for the app shell. Bump VERSION when you change any file.
-const VERSION = "podium-v1";
+const VERSION = "podium-v2";
 const SHELL = ["./", "index.html", "app.js", "app.css", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL))); self.skipWaiting(); });
