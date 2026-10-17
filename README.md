@@ -17,18 +17,18 @@ You need Node 18 or newer. There are no dependencies to install.
 
 ```bash
 cp .env.example .env          # paste your Anthropic API key into .env
-node server.js                # → http://localhost:3000
+node dev-server.js            # → http://localhost:3000
 ```
 
 Open it in **Chrome, Edge or Safari**. Live transcription needs the Web Speech API, and Firefox doesn't have it. Without a key, everything works except the AI coach.
 
 ## Deploy (Vercel)
 
-1. Push this folder to a GitHub repo and import it in Vercel. No framework or build command is needed.
+1. Push this folder to a GitHub repo and import it in Vercel. `vercel.json` already sets it up as a static site (files in `public/`) plus one function (`api/coach.js`), so leave the framework and build settings as they are.
 2. In Settings → Environment Variables, add `ANTHROPIC_API_KEY`.
 3. Strongly recommended: also add `ACCESS_CODE`. Without it, anyone with the URL can spend your API credit. Enter the same code in the app's Settings (gear icon).
 
-The static files are served from the root, and `api/coach.js` becomes `POST /api/coach`. Any other host works too: serve the static files and run `server.js`, or port `lib/coach.js` to your platform's function format.
+The files in `public/` are served as a static site, and `api/coach.js` becomes `POST /api/coach`. Any other host works too: serve `public/` and run `dev-server.js`, or port `lib/coach.js` to your platform's function format.
 
 **HTTPS is required** for microphone access (localhost is exempt).
 
@@ -54,10 +54,11 @@ Open the deployed URL, then:
 
 | File | What it does |
 |---|---|
-| `index.html`, `app.css`, `app.js` | The app: recording, analysis, scoring, UI |
+| `public/index.html`, `public/app.css`, `public/app.js` | The app: recording, analysis, scoring, UI |
 | `lib/coach.js` | Prompt and call to Claude, returns structured JSON |
 | `api/coach.js` | Vercel function wrapper |
-| `server.js` | Zero-dependency local server |
-| `sw.js`, `manifest.webmanifest`, `icon.svg` | Offline support and install |
+| `dev-server.js` | Zero-dependency local server (not used on Vercel) |
+| `public/sw.js`, `public/manifest.webmanifest`, `public/icon.svg` | Offline support and install |
+| `vercel.json` | Tells Vercel: static site from `public/`, no server |
 
-To add a scenario, add an entry to `SCEN` at the top of `app.js`. Set the model with `ANTHROPIC_MODEL`; the default is `claude-sonnet-5-5`.
+To add a scenario, add an entry to `SCEN` at the top of `public/app.js`. Set the model with `ANTHROPIC_MODEL`; the default is `claude-sonnet-5-5`.

@@ -1,5 +1,7 @@
 // Local server with zero dependencies: serves the app and the /api/coach endpoint.
-// Usage:  ANTHROPIC_API_KEY=sk-... node server.js   → http://localhost:3000
+// Usage:  ANTHROPIC_API_KEY=sk-... node dev-server.js   → http://localhost:3000
+// (Not used on Vercel: there the files in public/ are served statically and
+//  api/coach.js runs as a serverless function.)
 import http from "node:http";
 import { readFile, readFileSync, existsSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
@@ -7,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { coach } from "./lib/coach.js";
 
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
+const PUB  = join(ROOT, "public");
 const PORT = Number(process.env.PORT) || 3000;
 
 // Optional .env support (KEY=VALUE lines) so you don't have to export variables.
@@ -38,7 +41,7 @@ http.createServer((req, res) => {
   }
   let p = normalize(url.pathname === "/" ? "/index.html" : url.pathname);
   if (!PUBLIC.has(p)) { res.writeHead(404); return res.end("Not found"); }
-  readFile(join(ROOT, p), (err, buf) => {
+  readFile(join(PUB, p), (err, buf) => {
     if (err) { res.writeHead(404); return res.end("Not found"); }
     res.writeHead(200, { "content-type": TYPES[extname(p)] || "application/octet-stream" });
     res.end(buf);
